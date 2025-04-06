@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  server:
+    build: ./server
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./server/src/main/resources:/app/resources
+
+  client:
+    build: ./client
+    depends_on:
+      - server
