@@ -2,13 +2,38 @@ version: '3.8'
 
 services:
   server:
-    build: ./server
+    build: 
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: kotlin-server
     ports:
       - "8080:8080"
     volumes:
-      - ./server/src/main/resources:/app/resources
+      - ./server/src/main/resources:/app/resources:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    networks:
+      - app-network
+    environment:
+      - JAVA_OPTS=-Xms128m -Xmx256m
 
   client:
-    build: ./client
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: kotlin-client
     depends_on:
-      - server
+      server:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: on-failure
+
+networks:
+  app-network:
+    driver: bridge
